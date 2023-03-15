@@ -19,7 +19,7 @@ import { Icon28UserCircleOutline } from '@vkontakte/icons';
 const App = () => {
 	const [activeStory, setActiveStory] = useState('first');
 	const onStoryChange = (e) => setActiveStory(e.currentTarget.dataset.story);
-
+ 
 	return (
 		<ConfigProvider>
 			<AdaptivityProvider>
