@@ -1,94 +1,59 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-	View,
-	Panel,
-	Group,
-	Placeholder,
-	Epic, Tabbar,
-	TabbarItem,
+	Epic,
 	AdaptivityProvider,
 	AppRoot,
 	ConfigProvider,
 	SplitLayout,
 	SplitCol,
-	Title
 } from '@vkontakte/vkui';
 import '@vkontakte/vkui/dist/vkui.css';
-import { Icon28UserCircleOutline } from '@vkontakte/icons';
+import FirstView from './panels/FirstView';
+import SecondView from './panels/SecondView';
+import ThirdView from './panels/ThirdView';
+import TabbarPanel from './panels/TabbarPanel';
+import bridge from '@vkontakte/vk-bridge';
 
 const App = () => {
 	const [activeStory, setActiveStory] = useState('first');
+	const [friends, setFriends] = useState([]);
 	const onStoryChange = (e) => setActiveStory(e.currentTarget.dataset.story);
- 
+
+	useEffect(() => {
+		const fetchFriends = async () => {
+			const { access_token } = await bridge.send('VKWebAppGetAuthToken', {
+				app_id: 51581483,
+				scope: 'friends'
+			});
+			const {response} = await bridge.send('VKWebAppCallAPIMethod', {
+				method: 'friends.get',
+				params: {
+					access_token,
+					order: 'random',
+					count: 3,
+					v: '5.131',
+					name_case: 'gen',
+					fields: 'photo_100'
+				}
+			})
+			setFriends(response.items)			
+		}
+		fetchFriends();
+	}, [])
+
 	return (
 		<ConfigProvider>
 			<AdaptivityProvider>
 				<AppRoot>
 					<SplitLayout>
-						<SplitCol width="100%" autoSpaced>
+						<SplitCol autoSpaced>
 							<Epic
 								activeStory={activeStory}
-								tabbar={
-									(
-										<Tabbar>
-											<TabbarItem
-												onClick={onStoryChange}
-												selected={activeStory === 'first'}
-												data-story="first"
-												text="1"
-											>
-												<Icon28UserCircleOutline />
-											</TabbarItem>
-											<TabbarItem
-												onClick={onStoryChange}
-												selected={activeStory === 'second'}
-												data-story="second"
-												text="2"
-											>
-												<Icon28UserCircleOutline />
-											</TabbarItem>
-											<TabbarItem
-												onClick={onStoryChange}
-												selected={activeStory === 'third'}
-												data-story="third"
-												text="3"
-											>
-												<Icon28UserCircleOutline />
-											</TabbarItem>
-										</Tabbar>
-									)
-								}
+								tabbar={<TabbarPanel onStoryChange={onStoryChange} activeStory={activeStory} />}
 							>
-								<View id="first" activePanel="first">
-									<Panel id="first">
-										<Group>
-											<Placeholder icon={<Icon28UserCircleOutline width={56} height={56} />} />
-											<Title level="1" style={{ textAlign: 'center' }}>
-												Title 1
-											</Title>
-										</Group>
-									</Panel>
-								</View>
-								<View id="second" activePanel="second">
-									<Panel id="second">
-										<Group>
-											<Placeholder icon={<Icon28UserCircleOutline width={56} height={56} />}></Placeholder>
-											<Title level="1" style={{ textAlign: 'center' }}>
-												Title 2
-											</Title>
-										</Group>
-									</Panel>
-								</View>
-								<View id="third" activePanel="third">
-									<Panel id="third">
-										<Group>
-											<Placeholder icon={<Icon28UserCircleOutline width={56} height={56} />}></Placeholder>
-											<Title level="1" style={{ textAlign: 'center' }}>
-												Title 3
-											</Title>
-										</Group>
-									</Panel>
-								</View>
+								<FirstView id="first" friend={friends[0]} />
+								<SecondView id="second" friend={friends[1]} />
+								<ThirdView id="third" friend={friends[2]} />
 							</Epic>
 						</SplitCol>
 					</SplitLayout>
